@@ -10,7 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class MyStart {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyStart.class);
-		MyService myService = context.getBean(MyService.class);
+		MyService myService =  context.getBean(MyService.class);
 		myService.say();
+
 	}
 }
