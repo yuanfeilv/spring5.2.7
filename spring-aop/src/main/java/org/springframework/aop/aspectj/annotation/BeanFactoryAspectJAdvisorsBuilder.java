@@ -110,6 +110,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
 								// 解析获取所有的advisor
+								// 找到切面类 中不含@PointCut 的注解
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
 								if (this.beanFactory.isSingleton(beanName)) {
 									this.advisorsCache.put(beanName, classAdvisors);
@@ -117,6 +118,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 								else {
 									this.aspectFactoryCache.put(beanName, factory);
 								}
+								// 将结果放入到advisors 中
 								advisors.addAll(classAdvisors);
 							}
 							else {

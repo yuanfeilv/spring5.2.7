@@ -9,11 +9,11 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Configuration
 //@EnableAspectJAutoProxy
 @ComponentScan("com.ambity.service")
+@EnableAspectJAutoProxy(exposeProxy = true)
 public class MyStart {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyStart.class);
 		MyService myService =  context.getBean(MyService.class);
 		myService.say();
-
 	}
 }
