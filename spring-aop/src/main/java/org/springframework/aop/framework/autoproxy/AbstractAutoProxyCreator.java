@@ -233,21 +233,25 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return null;
 	}
 
+	// 循环依赖时获取aop 代理类的方法
 	@Override
 	public Object getEarlyBeanReference(Object bean, String beanName) {
 		Object cacheKey = getCacheKey(bean.getClass(), beanName);
+		// 当前方法实现了aop 循环依赖时已经调用过了，此时要从map 中移除
 		this.earlyProxyReferences.put(cacheKey, bean);
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 
 	@Override
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
+		// 尝试从缓存中获取，因为比较耗费性能
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
 			if (this.advisedBeans.containsKey(cacheKey)) {
 				return null;
 			}
+			//shouldSkip方法执行真正的解析切面逻辑
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
@@ -291,10 +295,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * identified as one to proxy by the subclass.
 	 * @see #getAdvicesAndAdvisorsForBean
 	 */
+	// 这个方法会在getBean 创建过程的初始化bean 后调用
 	@Override
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
 		if (bean != null) {
+			// 从缓存中 获取
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
+			// 从3级缓存获取中移除
 			if (this.earlyProxyReferences.remove(cacheKey) != bean) {
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
@@ -344,6 +351,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		// Create proxy if we have advice.
+		// 判断我们是否需要产生代理
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
@@ -392,6 +400,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @return whether to skip the given bean
 	 * @see org.springframework.beans.factory.config.AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
 	 */
+	// 这里的方法会被子类覆盖
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 		return AutoProxyUtils.isOriginalInstance(beanName, beanClass);
 	}

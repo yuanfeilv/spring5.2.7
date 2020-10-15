@@ -184,10 +184,12 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			synchronized (this.singletonObjects) {
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
+					// 获取工厂bean ，因为可能是aop 生成的代理，这里二级和三级缓存保证获取到的bean 是最后的完整bean
+					// a
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
 						singletonObject = singletonFactory.getObject();
-						// 放入
+						// 放入 二级缓存中，从3级缓存中移除
 						this.earlySingletonObjects.put(beanName, singletonObject);
 						this.singletonFactories.remove(beanName);
 					}

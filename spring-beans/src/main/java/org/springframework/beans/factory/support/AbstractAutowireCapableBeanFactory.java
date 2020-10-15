@@ -486,6 +486,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Make sure bean class is actually resolved at this point, and
 		// clone the bean definition in case of a dynamically resolved Class
 		// which cannot be stored in the shared merged bean definition.
+
+		// 确保此时的 bean 已经被解析了
+		// 如果获取的class 属性不为null，则克隆该 BeanDefinition
+		// 主要是因为该动态解析的 class 无法保存到到共享的 BeanDefinition
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
@@ -494,6 +498,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Prepare method overrides.
 		try {
+			/**
+			 * 验证和准备覆盖方法
+			 * lookup-method 和 replace-method
+			 * 这两个配置存放在 BeanDefinition 中的 methodOverrides
+			 * 我们知道在 bean 实例化的过程中如果检测到存在 methodOverrides ，
+			 * 则会动态地位为当前 bean 生成代理并使用对应的拦截器为 bean 做增强处理。
+			 * 具体的实现我们后续分析，现在先看 mbdToUse.prepareMethodOverrides() 代码块
+			 */
+
 			mbdToUse.prepareMethodOverrides();
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -503,7 +516,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			// 第一次调用bean 的后置处理器，可以接管bean 的创建过程
+			// 第一次调用bean 的后置处理器，可以接管bean 的创建过程，我们可以在这里直接返回bean 对象
+			// 这里主要是aop 进行切面的解析，这里不会生成aop 的代理对象，因为真正的对象还没有产生，这里只是先生成切面等信息
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -549,13 +563,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
 			throws BeanCreationException {
 
-		// Instantiate the bean.
+		//BeanWrapper 是对 Bean 的包装，其接口中所定义的功能很简单包括设置获取被包装的对象，获取被包装 bean 的属性描述器
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
+			//从没有完成的FactoryBean中移除
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			// 通过工厂方法或者反射创建bean 构造方法又分无参构造与有参构造
+			//使用合适的实例化策略来创建新的实例：工厂方法、构造函数自动注入、简单初始化 该方法很复杂也很重要
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		final Object bean = instanceWrapper.getWrappedInstance();
@@ -568,6 +583,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
+					// 进行后置处理器 @AutoWired的注解的预解析
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -587,13 +603,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			//把我们的早期对象包装成一个singletonFactory对象 该对象提供了一个getObject方法,
+			// 该方法内部调用getEarlyBeanReference方法
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			//给我们的属性进行赋值(调用set方法进行赋值)
 			populateBean(beanName, mbd, instanceWrapper);
+			// 进行对象初始化操作
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -635,6 +655,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Register bean as disposable.
 		try {
+			// 注册销毁bean 的销毁接口
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -963,6 +984,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
+					// aop 的实现类 AspectJAwareAdvisorAutoProxyCreator 实现了这个接口，
+					// 如果暴漏出的接口需要aop 代理，会在这里调用
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
 					exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);
 				}
