@@ -47,6 +47,9 @@ import org.springframework.util.Assert;
  * @see org.springframework.aop.aspectj.annotation.AspectJAdvisorFactory
  */
 @SuppressWarnings("serial")
+// 实现了InstantiationAwareBeanPostProcessor 接口，会在getBean 第一次调用后置处理器中使用
+// 实现了SmartInstantiationAwareBeanPostProcessor 会从3 级缓存中解决循环依赖
+// 实现了BeanPostProcessor 会在bean 初始化后创建动态代理
 public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorAutoProxyCreator {
 
 	@Nullable
@@ -89,9 +92,11 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	@Override
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
+		// 兼容老的版本，也是事务实现的advisor
 		List<Advisor> advisors = super.findCandidateAdvisors();
 		// Build Advisors for all AspectJ aspects in the bean factory.
 		if (this.aspectJAdvisorsBuilder != null) {
+			// this.aspectJAdvisorsBuilder.buildAspectJAdvisors() 是aop注解方式获取到advisor
 			advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 		}
 		return advisors;

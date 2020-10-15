@@ -241,13 +241,18 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 
 	@Override
+	// 后置处理器解析切面
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
+		// 尝试从缓存中获取
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+			// 如果bean 被解析过了直接返回
 			if (this.advisedBeans.containsKey(cacheKey)) {
 				return null;
 			}
+			// isInfrastructureClass 判断是否是要跳过的类
+			// shouldSkip 解析切面的方法
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
