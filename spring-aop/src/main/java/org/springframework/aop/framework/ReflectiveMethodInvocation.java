@@ -162,7 +162,9 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
 			return invokeJoinpoint();
 		}
-
+		// 每次都从interceptorsAndDynamicMethodMatchers 取出一个由于currentInterceptorIndex 每次都++ 而
+		//advisor 的实现类都会重新调用这个函数，相当于递归调用
+		//
 		Object interceptorOrInterceptionAdvice =
 				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {

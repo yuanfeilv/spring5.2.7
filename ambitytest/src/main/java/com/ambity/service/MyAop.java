@@ -1,9 +1,8 @@
 package com.ambity.service;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -14,15 +13,42 @@ import java.util.Arrays;
 @Order
 public class MyAop {
 	@Pointcut(value = "execution(* com.ambity.service.*.*(..))")
-	public void point(){
+	public void pointCut(){
 
 	}
-	@Before(value = "point()")
+
+	@Around(value = "pointCut()")
+	public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+			Object returnObj = null;
+			System.out.println(1);
+			returnObj = joinPoint.proceed();
+			System.out.println(2);
+			return returnObj;
+
+	}
+
+	@Before(value = "pointCut()")
 	public void methodBefore(JoinPoint joinPoint) throws Throwable {
 		String methodName = joinPoint.getSignature().getName();
-		System.out.println("执行目标方法【"+methodName+"】的<前置通知>,入参"+ Arrays.asList(joinPoint.getArgs()));
+		System.out.println(3);
 	}
-	public void say(){
 
+	@After(value = "pointCut()")
+	public void methodAfter(JoinPoint joinPoint) {
+		String methodName = joinPoint.getSignature().getName();
+		System.out.println(4);
 	}
+
+	@AfterReturning(value = "pointCut()",returning = "result")
+	public void methodReturning(JoinPoint joinPoint, Object result) {
+		String methodName = joinPoint.getSignature().getName();
+		System.out.println(5);
+	}
+	@AfterThrowing(value = "pointCut()")
+	public void methodAfterThrowing(JoinPoint joinPoint) {
+		String methodName = joinPoint.getSignature().getName();
+		System.out.println(6);
+	}
+
+
 }

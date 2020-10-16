@@ -5,15 +5,16 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-//@EnableAspectJAutoProxy
 @ComponentScan("com.ambity.service")
 @EnableAspectJAutoProxy(exposeProxy = true)
+@EnableTransactionManagement
 public class MyStart {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyStart.class);
-		MyService myService =  context.getBean(MyService.class);
-		myService.say();
+		MyService myServiceImpl =  context.getBean(MyService.class);
+		myServiceImpl.say();
 	}
 }
