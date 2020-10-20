@@ -516,41 +516,58 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
-			// Prepare this context for refreshing.
+			// 准备初始化的上下文
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			// AnnotationConfigApplicationContext 只会返回一个beanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			// 设置beanFactory 的属性
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+				//空方法
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 解析注解成beanDefinition
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				//实例化和注册beanFactory中扩展了BeanPostProcessor的bean。
+				//例如：
+				//AutowiredAnnotationBeanPostProcessor(处理被@Autowired注解修饰的bean并注入)
+				//RequiredAnnotationBeanPostProcessor(处理被@Required注解修饰的方法)
+				//CommonAnnotationBeanPostProcessor(处理@PreDestroy、@PostConstruct、@Resource等多个注解的作用)等。
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				// 处理国际化
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// 创建事件多播器
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 空方法由子类实现
 				onRefresh();
 
 				// Check for listener beans and register them.
+				//
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				//refresh做完之后需要做的其他事情。
+				//清除上下文资源缓存（如扫描中的ASM元数据）
+				//初始化上下文的生命周期处理器，并刷新（找出Spring容器中实现了Lifecycle接口的bean并执行start()方法）。
+				//发布ContextRefreshedEvent事件告知对应的ApplicationListener进行响应的操作
 				finishRefresh();
 			}
 

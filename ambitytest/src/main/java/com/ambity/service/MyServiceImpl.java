@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MyServiceImpl implements MyService{
 
-	@Transactional
 	public void say(){
 		System.out.println("aaaa");
 	}

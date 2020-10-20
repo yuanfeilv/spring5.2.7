@@ -999,10 +999,11 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
-
+		// 这里会将Request 信息放入threadLocal 中
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
+			// 调用DispatcherServlet 子类实现方法
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {

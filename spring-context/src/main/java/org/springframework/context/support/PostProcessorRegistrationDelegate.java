@@ -52,7 +52,13 @@ final class PostProcessorRegistrationDelegate {
 	private PostProcessorRegistrationDelegate() {
 	}
 
-
+	/**
+	 * 这里主要调用了3次 BeanDefinitionRegistryPostProcessor 的后置处理器，分别是实现了ProritryOrder 与Order ,还有普通的，用来解析配置类，@ComponentScan 注解等
+	 * postProcessBeanDefinitionRegistry 便是在此时调用
+	 * 调用了4次BeanFactoryPostProcessor 的后置处理器 用来对@Import 的注解进行解析
+	 * @param beanFactory
+	 * @param beanFactoryPostProcessors
+	 */
 	public static void invokeBeanFactoryPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
